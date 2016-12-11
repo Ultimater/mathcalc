@@ -10,7 +10,7 @@
 
 class MathCalculator
 {
-    protected $error, $result, $parsed, $hasError;
+    protected $error, $result, $parsed;
     protected function tokenize($str)
     {
         $level = 0;
@@ -24,7 +24,7 @@ class MathCalculator
             if( preg_match("#^[0-9.]$#", $c) ) // we're constructing a numeric token
             {
                 $x = end($tokens);  // get the last array element or FALSE for an empty array
-                if( $x !== FALSE && $x != ' ' && is_numeric("{$x}0" ) ) // we check for a space here as is_numeric is too forgiving
+                if( $x !== FALSE && $this->isNumeric("{$x}0" ) )
                 {
                     $tokens[key($tokens)] .= $c;  // append the character to the string we've been constructing
                     continue;
@@ -40,7 +40,7 @@ class MathCalculator
             if( $token == ' ' )continue;
             if( preg_match("#^[/+*()-]$#", $token) ){ $outArray[] = $token;continue; }
             if( preg_match("#^\\d+\\.+$#", $token) ) throw new Exception("Numbers cannot end with a decimal point: ". $token);
-            if( !is_numeric($token) ) throw new Exception("Expected a numeric token: ". $token); //e.g. 1.2.3.4
+            if( !$this->isNumeric($token) ) throw new Exception("Expected a numeric token: ". $token); //e.g. 1.2.3.4
             $outArray[] = $token;
         }
         return $outArray;
@@ -49,7 +49,13 @@ class MathCalculator
     protected function isOperator($token)
     {
         return preg_match("#^[/+*-]$#", $token);
-    } //isOperator
+    } // isOperator
+
+    // Unlike the built-in is_numeric, this function doesn't allow leading space, or a leading sign.
+    protected function isNumeric($token)
+    {
+        return preg_match("#^[0-9]+(?:\\.[0-9]+)?$#", $token);
+    } // isNumeric
 
     protected function getPrecedence($op)
     {
@@ -65,8 +71,7 @@ class MathCalculator
         $operatorStack = array();
         foreach( $tokens as $token )
         {
-            if( is_numeric($token) ){ $outputQueue[] = $token; continue; }
-            ////////////////////////////
+            if( $this->isNumeric($token) ){ $outputQueue[] = $token; continue; }
             if( $this->isOperator($token) )
             {
                 while( ( $op = end($operatorStack) ) && $op !== NULL && $this->isOperator($op) && $this->getPrecedence($token) <= $this->getPrecedence($op))
@@ -75,7 +80,6 @@ class MathCalculator
                 }
                 $operatorStack[] = $token; continue;
             }
-            /////////////////////////
             if( $token == '(' ){ $operatorStack[] = '('; continue; }
             if( $token == ')' )
             {
@@ -98,7 +102,7 @@ class MathCalculator
     {
         foreach( $ar as $token )
         {
-            if( is_numeric($token) ) {$stack[] = $token;continue;}
+            if( $this->isNumeric($token) ) {$stack[] = $token;continue;}
             if( !$this->isOperator($token) ) throw new Exception("Expected an operator: $token");
             $op = $token;
             $b = array_pop($stack);
@@ -147,7 +151,7 @@ class MathCalculator
   if(isset($_POST['input']))
   {
     $_SESSION['post']=$_POST;
-    header('Location: '.$_SERVER['PHP_SELF']);
+    header('Location: '.$_SERVER['REQUEST_URI']);
     exit;
   }
   // once the redirect is complete, we continue using $_POST like there was no redirect at all
@@ -189,4 +193,3 @@ if(isset($result))
 {
     echo "<p>Result: $result</p>";
 }
-?>

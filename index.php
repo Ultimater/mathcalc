@@ -8,6 +8,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+// This class implements the Shunting-yard algorithm: https://en.wikipedia.org/wiki/Shunting-yard_algorithm
 class MathCalculator
 {
     protected $error, $result, $parsed;
@@ -110,7 +111,7 @@ class MathCalculator
             if($op == '+') $stack[] = $a + $b;
             if($op == '-') $stack[] = $a - $b;
             if($op == '*') $stack[] = $a * $b;
-            if($op == '/') $stack[] = $a / $b;
+            if($op == '/'){ if($b == 0) throw new Exception("Error: Cannot divide by 0"); $stack[] = $a / $b; }
         }
         $result = end($stack);
         return $result;
@@ -142,7 +143,7 @@ class MathCalculator
             $this->error = $e->getMessage();
             return false;
         }
-    } // __construct
+    } // input
 
 } // MathCalculator
 
@@ -150,8 +151,8 @@ class MathCalculator
   session_start();
   if(isset($_POST['input']))
   {
-    $_SESSION['post']=$_POST;
-    header('Location: '.$_SERVER['REQUEST_URI']);
+    $_SESSION['post'] = $_POST;
+    header('Location: '.$_SERVER['REQUEST_URI']); // RFC 2616 requires an absolute URI, but as of RFC 7231 relative URIs are permitted.
     exit;
   }
   // once the redirect is complete, we continue using $_POST like there was no redirect at all
@@ -160,11 +161,12 @@ class MathCalculator
     $_POST = $_SESSION['post'];
     unset($_SESSION['post']);
   }
+  session_write_close(); // The sooner we do this, the sooner we free up other waiting requests
 
   $infix = '';
   $postfix = '';
   $result = null;
-  if(isset($_POST['input']) && $_POST['input'] == 'infix' && !empty($_POST['infixExpr']))
+  if(isset($_POST['input']) && $_POST['input'] == 'infix' && isset($_POST['infixExpr']) && $_POST['infixExpr'] != '')
   {
       $infix = $_POST['infixExpr'];
       $calc = new MathCalculator;

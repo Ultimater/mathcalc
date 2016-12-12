@@ -200,25 +200,43 @@ class MathCalculator
       if($calc->input($_POST['infixExpr']))
       {
         $postfix = $calc->getRPN();
-        $result = $calc->getResult();
+        $result = 'Result: '. $calc->getResult();
       } else{
-        echo $calc->getLastError();
+        $result = $calc->getLastError();
       }
         
   }
 
-?>
-
+header('Content-Type: text/html; charset=utf-8');
+?><!doctype html>
+<html lang="en">
+<head>
+<title>Infix/Postfix Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">
+html,body{margin:0;background-color:white;color:black;}
+div,form{text-align:center;width:500px;margin:0 auto;}
+table{text-align:left;}
+#postfixExpr{background-color:#f7f7f7;}
+p{text-align:left;}
+</style>
+</head>
+<body>
+<div>
 <form method="post">
 <table>
-<tr><td><label for="infixExpr">Infix<label></td><td><input type="text" id="infixExpr" name="infixExpr" value="<?= htmlentities($infix) ?>"><br>e.g. 18 / (9 + 9) + 7 - 5</td></tr>
+<tr><td><label for="infixExpr" title="Infix: the usual way of writing an expression">Infix</label></td><td><input type="text" id="infixExpr" name="infixExpr" value="<?= htmlentities($infix) ?>"><br>e.g. 18 / (9 + 9) + 7 - 5</td></tr>
 <tr><td colspan="2" style="text-align:right"><button type="submit" name="input" value="infix">Compute</button></td></tr>
-<tr><td><label for="postfixExp">Postfix</label></td><td><input type="text" id="postfixExpr" readonly="readonly" name="postfixExpr" value="<?= htmlentities($postfix) ?>"></td></tr>
+<tr><td><label for="postfixExpr" title="Postfix: also known as Reverse Polish Notation">Postfix</label></td><td><input type="text" id="postfixExpr" readonly="readonly" name="postfixExpr" value="<?= htmlentities($postfix) ?>"></td></tr>
 </table>
 </form>
 
 <?php
 if(isset($result))
 {
-    echo "<p>Result: $result</p>";
+    echo "<p>$result</p>";
 }
+?>
+</div>
+</body>
+</html>
